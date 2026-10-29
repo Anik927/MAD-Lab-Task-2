@@ -2,9 +2,11 @@
 import React from "react";
 import { router } from "expo-router";
 import { useStudents } from "../context/students-context";
-import { useEffect, useState } from "react";
+
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Keyboard,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -181,6 +183,26 @@ const updateField = (field: keyof FormData, value: string) => {
       setSubmitTrigger(true);
     }
   };
+
+    const scrollRef = useRef<ScrollView>(null);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+
+  useEffect(() => {
+    const showSub = Keyboard.addListener("keyboardDidShow", (e) => {
+      setKeyboardHeight(e.endCoordinates.height);
+      // scroll down so the field being typed in stays visible
+      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+    });
+    const hideSub = Keyboard.addListener("keyboardDidHide", () => {
+      setKeyboardHeight(0);
+    });
+
+    // Cleanup: stop listening when the form leaves the screen
+    return () => {
+      showSub.remove();
+      hideSub.remove();
+    };
+  }, []);
 
   return (
     <ScrollView style={styles.container}>

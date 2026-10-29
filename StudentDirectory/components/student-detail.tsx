@@ -1,6 +1,7 @@
 // components/student-detail.tsx
 
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { useStudents } from "../context/students-context";
 import { Student } from "../data/students";
 
 interface StudentDetailProps {
@@ -8,6 +9,26 @@ interface StudentDetailProps {
 }
 
 export default function StudentDetail({ student }: StudentDetailProps) {
+
+  const { dispatch } = useStudents();
+
+  const handleRemove = () => {
+    Alert.alert(
+      "Remove Student",
+      `Remove ${student.name} from the directory?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Remove",
+          style: "destructive",
+          onPress: () => {
+            dispatch({ type: "REMOVE_STUDENT", payload: student.id });
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <View style={styles.card}>
 
@@ -32,11 +53,29 @@ export default function StudentDetail({ student }: StudentDetailProps) {
         ))}
       </View>
 
+            {/* Add this at the bottom of the card */}
+      <Pressable style={styles.removeButton} onPress={handleRemove}>
+        <Text style={styles.removeText}>Remove from Directory</Text>
+      </Pressable>
+
     </View>
   );
 }
 
 const styles = StyleSheet.create({
+  removeButton: {
+    marginTop: 16,
+    paddingVertical: 10,
+    alignItems: "center",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#EF4444",
+  },
+  removeText: {
+    color: "#EF4444",
+    fontSize: 13,
+    fontWeight: "600",
+  },
   card: {
     margin: 12,
     padding: 20,
