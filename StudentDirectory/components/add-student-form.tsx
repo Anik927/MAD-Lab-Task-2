@@ -39,7 +39,7 @@ interface FormErrors {
 
 
 // Validation logic — pure function, easy to test and reason about
-function validateForm(data: FormData): FormErrors {
+function validateForm(data: FormData, students: Student[]): FormErrors {
   const newErrors: FormErrors = {};
   
     // Required field checks
@@ -50,12 +50,14 @@ function validateForm(data: FormData): FormErrors {
   }
   
   // Student ID format: NN-NNNNN-N (e.g. 22-12345-1)
-  const idPattern = /^\d{2}-\d{5}-\d$/;
+    const idPattern = /^\d{2}-\d{5}-\d$/;
   if (data.studentId.trim().length === 0) {
     newErrors.studentId = "Student ID is required.";
   } else if (!idPattern.test(data.studentId.trim())) {
-      newErrors.studentId = "Format must be NN-NNNNN-N (e.g. 22-12345-1).";
-    }
+    newErrors.studentId = "Format must be NN-NNNNN-N (e.g. 22-12345-1).";
+  } else if (students.some((s) => s.studentId === data.studentId.trim())) {
+    newErrors.studentId = "Student ID already exists";
+  }
     
   if (data.department.trim().length === 0) {
       newErrors.department = "Department is required.";
@@ -74,7 +76,7 @@ function validateForm(data: FormData): FormErrors {
 
   export default function AddStudentForm() {
     
-    const { dispatch } = useStudents();
+      const { students, dispatch } = useStudents();
     
     // Combined state — all 5 text fields live together
     const [formData, setFormData] = useState<FormData>({
@@ -118,11 +120,10 @@ const updateField = (field: keyof FormData, value: string) => {
     // Re-validate automatically whenever any field changes.
     // The dependency array [formData] means: run this effect
   // again whenever formData is a new object (i.e. on every keystroke).
-  useEffect(() => {
-      
-    const newErrors = validateForm(formData);
+    useEffect(() => {
+    const newErrors = validateForm(formData, students);
     setErrors(newErrors);
-  }, [formData]);
+  }, [formData, students]);
   
   // Derived value — not state, computed fresh every render
   const isFormValid =
