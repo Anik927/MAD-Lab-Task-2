@@ -1,47 +1,45 @@
-import SearchBar from "@/components/search-bar";
-import StudentItem from "@/components/student-item";
-import { Student, STUDENTS } from "@/data/students";
+// app/(tabs)/index.tsx — refactored
+
+import { router } from "expo-router";
 import { useState } from "react";
 import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-// NEW: the form component
-import AddStudentForm from "@/components/add-student-form";
+import SearchBar from "../../components/search-bar";
+import StudentDetail from "../../components/student-detail";
+import StudentItem from "../../components/student-item";
+import { useStudents } from "../../context/students-context";
+import { Student } from "../../data/students";
 
-export default function HomeScreen() {
-  const [query, setQuery] = useState<string>("");
+export default function Index() {
+  // Read students directly from the global context
+  const { students } = useStudents();
 
-  // NEW: local copy of the student list so we can add to it
-  const [students, setStudents] = useState<Student[]>(STUDENTS);
-  // NEW: whether we are showing the form or the directory
-  const [showForm, setShowForm] = useState(false);
+  // These stay as local state — they belong to this screen only
+  const [query, setQuery] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
-  // NEW: the form hands the new student back to this screen
-  const handleNewStudent = (newStudent: Student) => {
-    setStudents((prev) => [newStudent, ...prev]);
-    setShowForm(false);
-  };
-
-  // NEW: when showForm is true, show the form instead of the directory
-  if (showForm) {
-    return <AddStudentForm onSubmitSuccess={handleNewStudent} />;
-  }
-
-  // CHANGED: filter `students` (state) instead of STUDENTS
-  const filtered = students.filter((s) => {
-    return (
+  const filtered = students.filter(
+    (s) =>
       s.name.toLowerCase().includes(query.toLowerCase()) ||
       s.department.toLowerCase().includes(query.toLowerCase())
+  );
+
+  const handleSelect = (student: Student) => {
+    setSelectedStudent((prev) =>
+      prev?.id === student.id ? null : student
     );
-  });
+  };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.screen}>
       <View style={styles.titleBar}>
         <Text style={styles.title}>Student Directory</Text>
-        <Text style={styles.count}>{filtered.length} students</Text>
-        {/* NEW: button that opens the form */}
-        <Pressable onPress={() => setShowForm(true)}>
-          <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>+ Add</Text>
+        {/* Navigate to the AddStudent screen — no prop passing needed */}
+        <Pressable
+          style={styles.addButton}
+          onPress={() => router.push("/(tabs)/add-student")}
+        >
+          <Text style={styles.addButtonText}>+ Add</Text>
         </Pressable>
       </View>
 
@@ -51,7 +49,11 @@ export default function HomeScreen() {
         data={filtered}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
-          <StudentItem student={item} onPress={() => {}} isSelected={false} />
+          <StudentItem
+            student={item}
+            onPress={handleSelect}
+            isSelected={selectedStudent?.id === item.id}
+          />
         )}
         ListEmptyComponent={
           <View style={styles.empty}>
@@ -59,15 +61,16 @@ export default function HomeScreen() {
           </View>
         }
       />
+
+      {selectedStudent && (
+        <StudentDetail student={selectedStudent} />
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F0F4F8",
-  },
+  screen: { flex: 1, backgroundColor: "#F0F4F8" },
   titleBar: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -76,21 +79,14 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: "#0D1F4E",
   },
-  title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#FFFFFF",
+  title: { fontSize: 20, fontWeight: "bold", color: "#FFFFFF" },
+  addButton: {
+    backgroundColor: "#0D9488",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
   },
-  count: {
-    fontSize: 12,
-    color: "#CCFBF1",
-  },
-  empty: {
-    padding: 40,
-    alignItems: "center",
-  },
-  emptyText: {
-    fontSize: 14,
-    color: "#94A3B8",
-  },
+  addButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
+  empty: { padding: 40, alignItems: "center" },
+  emptyText: { fontSize: 14, color: "#94A3B8" },
 });

@@ -1,5 +1,7 @@
 // components/add-student-form.tsx
 import React from "react";
+import { router } from "expo-router";
+import { useStudents } from "../context/students-context";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -13,18 +15,17 @@ import FormField from "./form-field";
 import { Student } from "../data/students";
 
 
-interface AddStudentFormProps {
-    onSubmitSuccess: (student: Student) => void;
-}
+
+
 
 // Shape of the form's own state — note skillsText is a single
 // string here; it gets split into an array only on submit.
 interface FormData {
-    name: string;
-    studentId: string;
-    department: string;
-    bio: string;
-    skillsText: string;
+  name: string;
+  studentId: string;
+  department: string;
+  bio: string;
+  skillsText: string;
 }
 
 interface FormErrors {
@@ -37,8 +38,8 @@ interface FormErrors {
 
 // Validation logic — pure function, easy to test and reason about
 function validateForm(data: FormData): FormErrors {
-    const newErrors: FormErrors = {};
-    
+  const newErrors: FormErrors = {};
+  
     // Required field checks
     if (data.name.trim().length === 0) {
         newErrors.name = "Name is required.";
@@ -69,7 +70,10 @@ function validateForm(data: FormData): FormErrors {
   return newErrors;
 }
 
-export default function AddStudentForm({ onSubmitSuccess }: AddStudentFormProps) {
+  export default function AddStudentForm() {
+    
+    const { dispatch } = useStudents();
+    
     // Combined state — all 5 text fields live together
     const [formData, setFormData] = useState<FormData>({
     name: "",
@@ -148,7 +152,8 @@ const updateField = (field: keyof FormData, value: string) => {
 
       setIsSubmitting(false);
       setSubmitTrigger(false);
-      onSubmitSuccess(newStudent);
+      dispatch({ type: "ADD_STUDENT", payload: newStudent });
+      router.back();
     }, 1500);
 
     // Cleanup: if the component unmounts (user navigates away)
