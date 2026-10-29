@@ -2,7 +2,7 @@
 
 import { router } from "expo-router";
 import { useState } from "react";
-import { FlatList, Pressable, StyleSheet, Text, View } from "react-native";
+import { Alert, FlatList, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import SearchBar from "../../components/search-bar";
 import StudentDetail from "../../components/student-detail";
@@ -12,7 +12,7 @@ import { Student } from "../../data/students";
 
 export default function Index() {
   // Read students directly from the global context
-  const { students } = useStudents();
+    const { students, dispatch } = useStudents();
 
   // These stay as local state — they belong to this screen only
   const [query, setQuery] = useState("");
@@ -30,17 +30,39 @@ export default function Index() {
     );
   };
 
+    const handleReset = () => {
+    Alert.alert(
+      "Reset Directory",
+      "Restore the original student list? Any students you added or removed will be lost.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: () => {
+            dispatch({ type: "RESET" });
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.titleBar}>
         <Text style={styles.title}>Student Directory</Text>
         {/* Navigate to the AddStudent screen — no prop passing needed */}
-        <Pressable
-          style={styles.addButton}
-          onPress={() => router.push("/(tabs)/add-student")}
-        >
-          <Text style={styles.addButtonText}>+ Add</Text>
-        </Pressable>
+        <View style={styles.buttonGroup}>
+          <Pressable style={styles.resetButton} onPress={handleReset}>
+            <Text style={styles.resetButtonText}>Reset</Text>
+          </Pressable>
+          <Pressable
+            style={styles.addButton}
+            onPress={() => router.push("/(tabs)/add-student")}
+          >
+            <Text style={styles.addButtonText}>+ Add</Text>
+          </Pressable>
+        </View>
       </View>
 
       <SearchBar value={query} onChangeText={setQuery} />
@@ -79,6 +101,18 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     backgroundColor: "#0D1F4E",
   },
+
+  buttonGroup: { flexDirection: "row", gap: 8 },
+  
+  resetButton: {
+    borderWidth: 1,
+    borderColor: "#FFFFFF",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  resetButtonText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
+
   title: { fontSize: 20, fontWeight: "bold", color: "#FFFFFF" },
   addButton: {
     backgroundColor: "#0D9488",
