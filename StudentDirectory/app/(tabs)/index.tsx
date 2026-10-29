@@ -50,7 +50,7 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.screen}>
       <View style={styles.titleBar}>
-        <Text style={styles.title}>Student Directory</Text>
+        <Text style={styles.title}>Student Directory (Count:{students.length})</Text>
         {/* Navigate to the AddStudent screen — no prop passing needed */}
         <View style={styles.buttonGroup}>
           <Pressable style={styles.resetButton} onPress={handleReset}>
